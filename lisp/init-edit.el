@@ -52,29 +52,31 @@
     (bind-key "<C-return>" #'rect-hydra/body wgrep-mode-map))
   (with-eval-after-load 'wdired
     (bind-key "<C-return>" #'rect-hydra/body wdired-mode-map))
-  :pretty-hydra
-  ((:title (pretty-hydra-title "Rectangle" 'mdicon "nf-md-border_all")
-    :color amaranth :body-pre (rectangle-mark-mode) :post (deactivate-mark) :quit-key ("q" "C-g"))
-   ("Move"
-    (("h" backward-char "←")
-     ("j" next-line "↓")
-     ("k" previous-line "↑")
-     ("l" forward-char "→"))
-    "Action"
-    (("w" copy-rectangle-as-kill "copy") ; C-x r M-w
-     ("y" yank-rectangle "yank")         ; C-x r y
-     ("t" string-rectangle "string")     ; C-x r t
-     ("d" kill-rectangle "kill")         ; C-x r d
-     ("c" clear-rectangle "clear")       ; C-x r c
-     ("o" open-rectangle "open"))        ; C-x r o
-    "Misc"
-    (("N" rectangle-number-lines "number lines")        ; C-x r N
-     ("e" rectangle-exchange-point-and-mark "exchange") ; C-x C-x
-     ("u" undo "undo")
-     ("r" (if (region-active-p)
-              (deactivate-mark)
-            (rectangle-mark-mode 1))
-      "reset")))))
+  :config
+  ;; Define hydra directly to avoid :pretty-hydra keyword issues
+  (pretty-hydra-define rect-hydra
+    (:title (pretty-hydra-title "Rectangle" 'mdicon "nf-md-border_all")
+     :color amaranth :body-pre (rectangle-mark-mode) :post (deactivate-mark) :quit-key ("q" "C-g"))
+    ("Move"
+     (("h" backward-char "←")
+      ("j" next-line "↓")
+      ("k" previous-line "↑")
+      ("l" forward-char "→"))
+     "Action"
+     (("w" copy-rectangle-as-kill "copy") ; C-x r M-w
+      ("y" yank-rectangle "yank")         ; C-x r y
+      ("t" string-rectangle "string")     ; C-x r t
+      ("d" kill-rectangle "kill")         ; C-x r d
+      ("c" clear-rectangle "clear")       ; C-x r c
+      ("o" open-rectangle "open"))        ; C-x r o
+     "Misc"
+     (("N" rectangle-number-lines "number lines")        ; C-x r N
+      ("e" rectangle-exchange-point-and-mark "exchange") ; C-x C-x
+      ("u" undo "undo")
+      ("r" (if (region-active-p)
+               (deactivate-mark)
+             (rectangle-mark-mode 1))
+       "reset")))))
 
 ;; Automatically reload files was modified by external program
 (use-package autorevert
@@ -243,7 +245,8 @@
 ;; Increase selected region by semantic units
 (use-package expand-region
   :functions centaur-treesit-available-p treesit-buffer-root-node
-  :bind ("C-=" . er/expand-region)
+  :bind (("C-=" . er/expand-region)
+         ("M-2" . er/expand-region))
   :config
   (when (centaur-treesit-available-p)
     (defun treesit-mark-bigger-node ()
@@ -272,28 +275,46 @@
          ("C-M-<"         . mc/skip-to-previous-like-this)
          ("s-<mouse-1>"   . mc/add-cursor-on-click)
          ("C-S-<mouse-1>" . mc/add-cursor-on-click)
+         ("M-1"           . mc/mark-all-like-this-dwim)
+         ("M-3"           . mc/mark-next-like-this)
+         ("M-4"           . mc/mark-previous-like-this)
+         ("M-5"           . mc/mark-all-like-this)
+
          :map mc/keymap
          ("C-|" . mc/vertical-align-with-space))
-  :pretty-hydra
-  ((:title (pretty-hydra-title "Multiple Cursors" 'mdicon "nf-md-cursor_move")
-    :color amaranth :quit-key ("q" "C-g"))
-   ("Up"
-	(("p" mc/mark-previous-like-this "prev")
-	 ("P" mc/skip-to-previous-like-this "skip")
-	 ("M-p" mc/unmark-previous-like-this "unmark")
-	 ("|" mc/vertical-align "align with input CHAR"))
-    "Down"
-    (("n" mc/mark-next-like-this "next")
-	 ("N" mc/skip-to-next-like-this "skip")
-	 ("M-n" mc/unmark-next-like-this "unmark"))
-    "Misc"
-    (("l" mc/edit-lines "edit lines" :exit t)
-	 ("a" mc/mark-all-like-this "mark all" :exit t)
-	 ("s" mc/mark-all-in-region-regexp "search" :exit t)
-     ("<mouse-1>" mc/add-cursor-on-click "click"))
-    "% 2(mc/num-cursors) cursor%s(if (> (mc/num-cursors) 1) \"s\" \"\")"
-	(("0" mc/insert-numbers "insert numbers" :exit t)
-	 ("A" mc/insert-letters "insert letters" :exit t)))))
+  :config
+  (defun mc/mark-all-like-this-dwim ()
+    "If region is active, mark all like region. Otherwise select word at point and mark all."
+    (interactive)
+    (unless (use-region-p)
+      (let ((word-regexp "\\b\\w+\\b"))
+        (skip-syntax-forward "w_")
+        (let ((end (point)))
+          (skip-syntax-backward "w_")
+          (set-mark end)))
+      (mc/mark-all-like-this)))
+
+  ;; Define hydra directly to avoid :pretty-hydra keyword issues
+  (pretty-hydra-define multiple-cursors-hydra
+    (:title (pretty-hydra-title "Multiple Cursors" 'mdicon "nf-md-cursor_move")
+     :color amaranth :quit-key ("q" "C-g"))
+    ("Up"
+     (("p" mc/mark-previous-like-this "prev")
+      ("P" mc/skip-to-previous-like-this "skip")
+      ("M-p" mc/unmark-previous-like-this "unmark")
+      ("|" mc/vertical-align "align with input CHAR"))
+     "Down"
+     (("n" mc/mark-next-like-this "next")
+      ("N" mc/skip-to-next-like-this "skip")
+      ("M-n" mc/unmark-next-like-this "unmark"))
+     "Misc"
+     (("l" mc/edit-lines "edit lines" :exit t)
+      ("a" mc/mark-all-like-this "mark all" :exit t)
+      ("s" mc/mark-all-in-region-regexp "search" :exit t)
+      ("<mouse-1>" mc/add-cursor-on-click "click"))
+     "% 2(mc/num-cursors) cursor%s(if (> (mc/num-cursors) 1) \"s\" \"\")"
+     (("0" mc/insert-numbers "insert numbers" :exit t)
+      ("A" mc/insert-letters "insert letters" :exit t)))))
 
 ;; Smartly select region, rectangle, multi cursors
 (use-package smart-region

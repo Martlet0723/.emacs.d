@@ -61,30 +61,31 @@
               :poshandler posframe-poshandler-frame-center-near-bottom))))
   (hydra-set-posframe-appearance))
 
+;; Define these functions before loading pretty-hydra
+(defun pretty-hydra-add-imenu ()
+  "Have hydras in `imenu'."
+  (add-to-list 'imenu-generic-expression
+               '("Hydras" "^.*(\\(pretty-hydra-define\\) \\([a-zA-Z-]+\\)" 2)))
+
+(cl-defun pretty-hydra-title (title &optional icon-type icon-name
+                                    &key face height v-adjust)
+  "Add an icon in the hydra title."
+  (let ((face (or face 'mode-line-emphasis))
+        (height (or height 1.2))
+        (v-adjust (or v-adjust 0.0)))
+    (concat
+     (when (and (icons-displayable-p) icon-type icon-name)
+       (let ((f (intern (format "nerd-icons-%s" icon-type))))
+         (when (fboundp f)
+           (concat
+            (apply f (list icon-name :face face :height height :v-adjust v-adjust))
+            " "))))
+     (propertize title 'face face))))
+
 (use-package pretty-hydra
   :functions icons-displayable-p
   :bind ("<f6>" . toggles-hydra/body)
   :hook (emacs-lisp-mode . pretty-hydra-add-imenu)
-  :init
-  (defun pretty-hydra-add-imenu ()
-    "Have hydras in `imenu'."
-    (add-to-list 'imenu-generic-expression
-                 '("Hydras" "^.*(\\(pretty-hydra-define\\) \\([a-zA-Z-]+\\)" 2)))
-
-  (cl-defun pretty-hydra-title (title &optional icon-type icon-name
-                                      &key face height v-adjust)
-    "Add an icon in the hydra title."
-    (let ((face (or face 'mode-line-emphasis))
-          (height (or height 1.2))
-          (v-adjust (or v-adjust 0.0)))
-      (concat
-       (when (and (icons-displayable-p) icon-type icon-name)
-         (let ((f (intern (format "nerd-icons-%s" icon-type))))
-           (when (fboundp f)
-             (concat
-              (apply f (list icon-name :face face :height height :v-adjust v-adjust))
-              " "))))
-       (propertize title 'face face))))
   :config
   (with-no-warnings
     ;; Define hydra for global toggles
