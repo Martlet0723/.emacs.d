@@ -33,7 +33,8 @@
 (use-package flymake
   :diminish
   :functions my-elisp-flymake-byte-compile
-  :bind ("C-c f" . flymake-show-buffer-diagnostics)
+  :bind ("C-c F" . flymake-show-buffer-diagnostics)
+        ("C-c f" . flymake-start)
   :hook prog-mode
   :custom
   (flymake-no-changes-timeout nil)
