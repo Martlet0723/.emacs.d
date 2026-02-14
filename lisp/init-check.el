@@ -35,7 +35,7 @@
   :functions my-elisp-flymake-byte-compile
   :bind ("C-c F" . flymake-show-buffer-diagnostics)
         ("C-c f" . flymake-start)
-  :hook prog-mode
+  :hook (prog-mode . flymake-mode)
   :custom
   (flymake-no-changes-timeout nil)
   (flymake-fringe-indicator-position 'right-fringe)
@@ -47,7 +47,10 @@
     (let ((elisp-flymake-byte-compile-load-path
            (append elisp-flymake-byte-compile-load-path load-path)))
       (apply fn args)))
-  (advice-add 'elisp-flymake-byte-compile :around #'my-elisp-flymake-byte-compile))
+  (advice-add 'elisp-flymake-byte-compile :around #'my-elisp-flymake-byte-compile)
+
+  ;; Trigger flymake on save
+  (add-hook 'after-save-hook #'flymake-start nil t))
 
 ;; Display Flymake errors with overlays
 (use-package flyover
