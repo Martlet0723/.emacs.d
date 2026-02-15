@@ -30,6 +30,15 @@
 
 ;;; Code:
 
+;; 注释/取消注释当前行（无选区时自动选中当前行）
+(defun comment-or-uncomment-region-or-line ()
+  "Comment or uncomment the region or the current line."
+  (interactive)
+  (if (use-region-p)
+      (comment-or-uncomment-region (region-beginning) (region-end))
+    (comment-or-uncomment-region (line-beginning-position) (line-end-position))))
+(global-set-key (kbd "C-c ;") 'comment-or-uncomment-region-or-line)
+
 (eval-when-compile
   (require 'init-const))
 
@@ -246,7 +255,7 @@
 (use-package expand-region
   :functions centaur-treesit-available-p treesit-buffer-root-node
   :bind (("C-=" . er/expand-region)
-         ("M-2" . er/expand-region))
+         ("C-c 2" . er/expand-region))
   :config
   (when (centaur-treesit-available-p)
     (defun treesit-mark-bigger-node ()
@@ -275,10 +284,10 @@
          ("C-M-<"         . mc/skip-to-previous-like-this)
          ("s-<mouse-1>"   . mc/add-cursor-on-click)
          ("C-S-<mouse-1>" . mc/add-cursor-on-click)
-         ("M-1"           . mc/mark-all-like-this-dwim)
-         ("M-3"           . mc/mark-next-like-this)
-         ("M-4"           . mc/mark-previous-like-this)
-         ("M-5"           . mc/mark-all-like-this)
+         ("C-c 1"         . mc/mark-all-like-this-dwim)
+         ("C-c 3"         . mc/mark-next-like-this)
+         ("C-c 4"         . mc/mark-previous-like-this)
+         ("C-c 5"         . mc/mark-all-like-this)
 
          :map mc/keymap
          ("C-|" . mc/vertical-align-with-space))
