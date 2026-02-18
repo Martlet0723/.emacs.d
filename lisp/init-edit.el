@@ -225,11 +225,17 @@
   :hook(;; show org ediffs unfolded
         (ediff-prepare-buffer . outline-show-all)
         ;; restore window layout when done
-        (ediff-quit . winner-undo))
+        (ediff-quit . my-restore-layout))
   :config
   (setq ediff-window-setup-function 'ediff-setup-windows-plain
         ediff-split-window-function 'split-window-horizontally
-        ediff-merge-split-window-function 'split-window-horizontally))
+        ediff-merge-split-window-function 'split-window-horizontally)
+  (defun my-restore-layout ()
+    "恢复窗口布局，优先使用 tab-bar-history。"
+    (cond ((bound-and-true-p tab-bar-history-mode)
+           (tab-bar-history-back))
+          ((bound-and-true-p winner-mode)
+           (winner-undo)))))
 
 ;; Automatic parenthesis pairing
 (use-package elec-pair

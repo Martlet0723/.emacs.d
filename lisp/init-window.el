@@ -37,10 +37,10 @@
                           (windmove-default-keybindings 'super))))
 
 ;; Restore old window configurations
+;; 优先使用 tab-bar-history (Emacs 29+), winner 作为备选
 (use-package winner
   :ensure nil
   :commands (winner-undo winner-redo)
-  ;; :hook window-setup
   :init (setq winner-boring-buffers '("*Completions*"
                                       "*Compile-Log*"
                                       "*inferior-lisp*"
@@ -86,8 +86,8 @@
     (("o" set-frame-font "frame font")
      ("f" make-frame-command "new frame")
      ("d" delete-frame "delete frame")
-     ("<left>" winner-undo "winner undo")
-     ("<right>" winner-redo "winner redo"))))
+     ("<left>" tab-bar-history-back "previous layout")
+     ("<right>" tab-bar-history-forward "next layout"))))
   :custom-face
   (aw-leading-char-face ((t (:inherit font-lock-keyword-face :foreground unspecified :bold t :height 3.0))))
   (aw-minibuffer-leading-char-face ((t (:inherit font-lock-keyword-face :bold t :height 1.0))))
