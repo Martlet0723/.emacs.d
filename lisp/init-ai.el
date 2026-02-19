@@ -61,15 +61,15 @@
 (use-package minuet
   :diminish
   :bind
-  (("M-i" . #'minuet-show-suggestion)    ; 显示补全建议
-   ("M-y" . #'minuet-complete-with-minibuffer) ; 使用 minibuffer 补全
+  (("C-M-i" . #'minuet-show-suggestion)    ; 显示补全建议
+   ("C-M-y" . #'minuet-complete-with-minibuffer) ; 使用 minibuffer 补全
    ("C-M-m" . #'minuet-configure-provider)  ; 配置 provider
    :map minuet-active-mode-map
    ("M-p" . #'minuet-previous-suggestion)   ; 上一个建议
    ("M-n" . #'minuet-next-suggestion)       ; 下一个建议
    ("M-a" . #'minuet-accept-suggestion-line) ; 逐行接受建议
    ("M-A" . #'minuet-accept-suggestion)      ; 接受整个建议
-   ("M-e" . #'minuet-dismiss-suggestion))    ; 关闭建议
+   ("C-M-e" . #'minuet-dismiss-suggestion))    ; 关闭建议
 
   :init
   ;; 启用自动建议模式 (类似 Copilot)
