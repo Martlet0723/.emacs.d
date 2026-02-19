@@ -156,5 +156,28 @@ Avoid placing large files like EAF in `site-lisp` to prevent slow startup."
 (require 'init-elixir)
 (require 'init-web)
 
+;; EAF (Emacs Application Framework) - 仅图形版启用
+(when (display-graphic-p)
+  (add-to-list 'load-path "~/.emacs.d/eaf")
+
+  ;; 禁用EAF对dired和find-file的接管（必须先设置，再加载eaf）
+  (setq eaf-dired-advisor-enable nil)
+  (setq eaf-find-file-advisor-enable nil)
+
+  (require 'eaf)
+
+  ;; 强制移除dired和find-file的advice（双重保险）
+  (advice-remove #'dired-find-file #'eaf--dired-find-file-advisor)
+  (advice-remove #'dired-find-alternate-file #'eaf--dired-find-file-advisor)
+  (advice-remove #'find-file #'eaf--find-file-advisor)
+  (advice-remove #'org-open-file #'eaf--find-file-advisor)
+
+  ;; EAF Applications
+  (require 'eaf-browser)
+  (require 'eaf-pdf-viewer)
+  (require 'eaf-image-viewer)
+  (require 'eaf-video-player)
+  (require 'eaf-markdown-previewer)
+  (require 'eaf-terminal))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
