@@ -223,7 +223,8 @@
 ;; Window switch with switch-window (avoid EAF遮挡)
 (use-package switch-window
   :ensure t
-  :bind (("C-c o" . switch-window))
+  :bind (("C-c o" . switch-window)
+         ("C-c p" . switch-window-then-delete))
   :config
   ;; 使用数字编号
   (setq switch-window-shortcut-style 'numbers)
