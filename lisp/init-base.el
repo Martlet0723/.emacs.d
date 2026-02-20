@@ -102,6 +102,44 @@
 (set-terminal-coding-system 'utf-8)
 (setq locale-coding-system 'utf-8)
 (setq system-time-locale "C")
+
+;; Fix clipboard encoding for GUI Emacs on Linux
+(when (and sys/linuxp (display-graphic-p))
+  ;; X11/XWayland: prioritize UTF-8 string types
+  (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING))
+  (set-selection-coding-system 'utf-8-unix)
+
+  ;; Wayland: use external clipboard tools if available
+  ;; wl-clipboard for native Wayland, xclip for XWayland
+  (cond
+   ;; Prefer wl-copy/wl-paste for Wayland (works with both native and XWayland)
+   ((and (getenv "WAYLAND_DISPLAY")
+         (executable-find "wl-copy")
+         (executable-find "wl-paste"))
+    (setq interprogram-cut-function
+          (lambda (text &optional push)
+            (let ((process-connection-type nil))
+              (let ((proc (start-process "wl-copy" nil "wl-copy" "-f")))
+                (process-send-string proc text)
+                (process-send-eof proc)))))
+    (setq interprogram-paste-function
+          (lambda ()
+            (let ((process-connection-type nil))
+              (shell-command-to-string "wl-paste --no-newline")))))
+
+   ;; Fallback to xclip
+   ((executable-find "xclip")
+    (setq interprogram-cut-function
+          (lambda (text &optional push)
+            (let ((process-connection-type nil))
+              (let ((proc (start-process "xclip" nil "xclip" "-selection" "clipboard" "-in")))
+                (process-send-string proc text)
+                (process-send-eof proc)))))
+    (setq interprogram-paste-function
+          (lambda ()
+                         (let ((process-connection-type nil))
+                           (shell-command-to-string "xclip -selection clipboard -out")))))))
+
 (if sys/win32p
     (add-to-list 'process-coding-system-alist
                  '("cmdproxy" utf-8 . gbk))
