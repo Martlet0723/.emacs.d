@@ -166,6 +166,9 @@ Avoid placing large files like EAF in `site-lisp` to prevent slow startup."
 
   (require 'eaf)
 
+  ;; KDE Plasma Wayland 窗口管理配置
+  (setq eaf-wm-name "KDE")
+
   ;; 强制移除dired和find-file的advice（双重保险）
   (advice-remove #'dired-find-file #'eaf--dired-find-file-advisor)
   (advice-remove #'dired-find-alternate-file #'eaf--dired-find-file-advisor)
