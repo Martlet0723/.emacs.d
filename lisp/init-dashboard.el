@@ -79,6 +79,7 @@
     :init
     (setq dashboard-banner-logo-title "CENTAUR EMACS - Enjoy Programming & Writing"
           dashboard-startup-banner (or centaur-logo 'official)
+          dashboard-image-banner-max-width 600
           dashboard-page-separator "\n\f\n"
           dashboard-projects-backend 'project-el
           dashboard-path-style 'truncate-middle
