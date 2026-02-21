@@ -73,7 +73,7 @@
 
   :init
   ;; 启用自动建议模式 (类似 Copilot)
-  (add-hook 'prog-mode-hook #'minuet-auto-suggestion-mode)
+  ;; (add-hook 'prog-mode-hook #'minuet-auto-suggestion-mode) ; 注释掉关闭默认启用
 
   :config
   ;; 配置使用 DeepSeek Coder
