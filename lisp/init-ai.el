@@ -37,16 +37,23 @@
 (use-package gptel
   :functions gptel-make-openai
   :custom
-  (gptel-model 'gpt-4o)
-  ;; Put the apikey to `auth-sources'
-  ;; Format: "machine {HOST} login {USER} password {APIKEY}"
-  ;; The LLM host is used as HOST, and "apikey" as USER.
-  (gptel-backend (gptel-make-openai "Github Models"
-                   :host "models.inference.ai.azure.com"
-                   :endpoint "/chat/completions?api-version=2024-05-01-preview"
+  (gptel-model 'MiniMax-M2.5)
+  ;; Use MiniMax API (OpenAI compatible)
+  (gptel-backend (gptel-make-openai "MiniMax"
+                   :host "api.minimaxi.com"
+                   :endpoint "/v1/chat/completions"
                    :stream t
-                   :key 'gptel-api-key
-                   :models '(gpt-4o))))
+                   :key (getenv "MINMAX_API_KEY")
+                   :models '(MiniMax-M2.5)))
+  ;; Previous config (GitHub Models):
+  ;; (gptel-model 'gpt-4o)
+  ;; (gptel-backend (gptel-make-openai "Github Models"
+  ;;                  :host "models.inference.ai.azure.com"
+  ;;                  :endpoint "/chat/completions?api-version=2024-05-01-preview"
+  ;;                  :stream t
+  ;;                  :key 'gptel-api-key
+  ;;                  :models '(gpt-4o)))
+  )
 
 ;; Generate commit messages for magit
 (use-package gptel-magit
@@ -94,7 +101,26 @@
   (minuet-set-optional-options minuet-openai-compatible-options :max_tokens 128)
   (minuet-set-optional-options minuet-openai-compatible-options :top_p 0.9))
 
+;; Aidermacs - AI Pair Programming with Aider
+(use-package aidermacs
+  :bind (("C-c M-m" . aidermacs-transient-menu))
+  :custom
+  ;; 指定 aider 可执行文件路径
+  (aidermacs-program (expand-file-name "~/.local/bin/aider"))
+  ;; 使用 MiniMax-M2.5 模型 (Anthropic 兼容格式)
+  (aidermacs-default-model "anthropic/MiniMax-M2.5")
+  (aidermacs-default-chat-mode 'architect)
+  ;; 使用 comint 后端 (更稳定)
+  (aidermacs-backend 'comint)
+  ;; 关闭自动提交
+  (aidermacs-auto-commits nil)
+  :config
+  ;; 设置 Anthropic 兼容 API Key (从 env.el 读取 MINMAX_API_KEY)
+  (setenv "ANTHROPIC_API_KEY" (getenv "MINMAX_API_KEY"))
+  ;; 设置 MiniMax Anthropic 兼容 API 端点
+  (setenv "ANTHROPIC_BASE_URL" "https://api.minimaxi.com/anthropic"))
+
+
 (provide 'init-ai)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; init-ai.el ends here
+ ;;; init-ai.el ends here
