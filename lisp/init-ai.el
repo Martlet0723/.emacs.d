@@ -120,6 +120,40 @@
   ;; 设置 MiniMax Anthropic 兼容 API 端点
   (setenv "ANTHROPIC_BASE_URL" "https://api.minimaxi.com/anthropic"))
 
+;; org-ai - AI assistant in Org mode
+;; Set API config before loading org-ai
+;; MiniMax uses OpenAI-compatible API, so we use 'openai service with custom endpoint
+(setq org-ai-service 'openai)
+(setq org-ai-openai-api-token (getenv "MINMAX_API_KEY"))
+(setq org-ai-use-auth-source nil)
+;; Set MiniMax API endpoint (OpenAI compatible)
+(setq org-ai-openai-chat-endpoint "https://api.minimaxi.com/v1/chat/completions")
+(use-package org-ai
+  :commands (org-ai-mode org-ai-global-mode)
+  :hook (org-mode . org-ai-mode)
+  :bind (:map org-ai-mode-map
+              ("C-c C-c" . org-ai-complete-block)
+              ("C-c C-k" . org-ai-kill-region-at-point))
+  :custom
+  ;; Use MiniMax API
+  (org-ai-default-chat-model "MiniMax-M2.5")
+  ;; Disable speech features
+  (org-ai-talk-output-enable nil)
+  ;; Don't jump to end automatically
+  (org-ai-jump-to-end-of-block nil)
+  :config
+  ;; Add MiniMax to available models
+  (add-to-list 'org-ai-chat-models "MiniMax-M2.5")
+  ;; Enable global mode for commands outside org-mode
+  (org-ai-global-mode +1)
+  ;; Fix multibyte by advising the original function
+  (defun org-ai--payload-utf8-fix (orig-fun &rest args)
+    "Around advice to force unibyte for URL requests."
+    (let ((result (apply orig-fun args)))
+      (if (multibyte-string-p result)
+          (string-to-unibyte result)
+        result)))
+  (advice-add #'org-ai--payload :around #'org-ai--payload-utf8-fix))
 
 (provide 'init-ai)
 
