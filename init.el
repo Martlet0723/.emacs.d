@@ -182,6 +182,33 @@ Avoid placing large files like EAF in `site-lisp` to prevent slow startup."
   (require 'eaf-video-player)
   (require 'eaf-markdown-previewer)
   (require 'eaf-terminal)
-  (require 'eaf-music-player))
+  (require 'eaf-music-player)
+
+  ;; 修复 markdown previewer 首次启动时 C-x 0/1 不正常的问题
+  ;; 方案：第一次使用 markdown previewer 时自动预热 EAF
+  (defvar my/eaf-preheated nil
+    "Whether EAF has been preheated.")
+  (defun my/eaf-preheat-if-needed ()
+    "Preheat EAF before first use of markdown previewer."
+    (unless my/eaf-preheated
+      (setq my/eaf-preheated t)
+      (message "Preheating EAF for markdown previewer...")
+      ;; 打开空白页面预热
+      (eaf-open "about:blank" "browser")
+      ;; 延迟关闭空白页面，确保 EAF 完全初始化
+      (run-with-timer
+       3.0 nil
+       (lambda ()
+         ;; 查找并关闭空白页面 buffer
+         (dolist (buf (buffer-list))
+           (with-current-buffer buf
+             (when (and (derived-mode-p 'eaf-mode)
+                        (boundp 'eaf--buffer-url)
+                        (equal eaf--buffer-url "about:blank"))
+               (kill-buffer buf))))
+         (message "EAF preheating done.")))))
+  ;; 在 markdown previewer 打开前预热
+  (advice-add 'eaf-markdown-previewer-open :before #'my/eaf-preheat-if-needed))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
