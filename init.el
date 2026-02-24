@@ -181,6 +181,7 @@ Avoid placing large files like EAF in `site-lisp` to prevent slow startup."
   (require 'eaf-image-viewer)
   (require 'eaf-video-player)
   (require 'eaf-markdown-previewer)
-  (require 'eaf-terminal))
+  (require 'eaf-terminal)
+  (require 'eaf-music-player))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
