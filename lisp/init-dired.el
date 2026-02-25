@@ -123,14 +123,12 @@
                   "\\|^.DS_Store$\\|^.projectile$\\|^.git*\\|^.svn$\\|^.vscode$\\|\\.js\\.meta$\\|\\.meta$\\|\\.elc$\\|^.emacs.*"))))
 
 ;; System clipboard integration for dired
-;; Copy/move files between Emacs and system file manager
+;; Copy files to system clipboard for pasting externally (e.g., file upload)
 (require 'url-util)
 
-(defvar my-dired-clipboard-action nil
-  "Last clipboard action: 'copy or 'cut.")
-
 (defun my-dired-copy-to-system-clipboard ()
-  "Copy marked files in dired to system clipboard."
+  "Copy marked files in dired to system clipboard.
+Allows pasting files in external applications (browser uploads, file managers, etc.)."
   (interactive)
   (let ((files (or (dired-get-marked-files) (user-error "No files marked"))))
     (let* ((uris (mapconcat
@@ -143,84 +141,11 @@
                                           "wl-copy" nil nil nil
                                           "--type" "text/uri-list"))))
       (if (eq status 0)
-          (progn
-            (setq my-dired-clipboard-action 'copy)
-            (message "Copied %d file(s) to system clipboard" (length files)))
+          (message "Copied %d file(s) to system clipboard" (length files))
         (message "Failed to copy to clipboard (status: %s)" status)))))
 
-(defun my-dired-cut-to-system-clipboard ()
-  "Cut marked files in dired to system clipboard.
-Sets both file URIs and cut selection marker."
-  (interactive)
-  (let ((files (or (dired-get-marked-files) (user-error "No files marked"))))
-    (let* ((uris (mapconcat
-                  (lambda (f)
-                    (concat "file://" (url-encode-url (expand-file-name f))))
-                  files "\n"))
-           ;; First set the cut selection marker
-           (cut-status (with-temp-buffer
-                         (insert "1")
-                         (call-process-region (point-min) (point-max)
-                                              "wl-copy" nil nil nil
-                                              "--type" "application/x-kde-cutselection")))
-           ;; Then set the file URIs
-           (uri-status (when (eq cut-status 0)
-                         (with-temp-buffer
-                           (insert uris)
-                           (call-process-region (point-min) (point-max)
-                                                "wl-copy" nil nil nil
-                                                "--type" "text/uri-list")))))
-      (if (and (eq cut-status 0) (eq uri-status 0))
-          (progn
-            (setq my-dired-clipboard-action 'cut)
-            (message "Cut %d file(s) to system clipboard" (length files)))
-        (message "Failed to cut to clipboard (status: cut=%s, uri=%s)" cut-status uri-status)))))
-
-(defun my-dired-paste-from-system-clipboard ()
-  "Paste files from system clipboard to current dired directory.
-Detects cut operation via application/x-kde-cutselection MIME type."
-  (interactive)
-  (let ((target-dir (dired-current-directory))
-        ;; Check if this is a cut operation from external source
-        (is-cut (string= "1" (string-trim (shell-command-to-string "wl-paste --type application/x-kde-cutselection 2>/dev/null || echo ''"))))
-        (clipboard-content (shell-command-to-string "wl-paste --type text/uri-list 2>/dev/null || wl-paste 2>/dev/null")))
-    (if (string-empty-p clipboard-content)
-        (message "Clipboard is empty or no valid content")
-      (let ((files (delq nil
-                         (mapcar
-                          (lambda (line)
-                            (let ((trimmed (string-trim line)))
-                              (when (string-prefix-p "file://" trimmed)
-                                (url-unhex-string (substring trimmed 7)))))
-                          (split-string clipboard-content "[\n\r]+" t)))))
-        (if files
-            (progn
-              (dolist (src files)
-                (let* ((basename (file-name-nondirectory src))
-                       (dest (expand-file-name basename target-dir)))
-                  (if (file-exists-p src)
-                      (if (file-equal-p src dest)
-                          (message "Skipping %s (same location)" basename)
-                        ;; Use is-cut from external or my-dired-clipboard-action from internal
-                        (if (or is-cut (eq my-dired-clipboard-action 'cut))
-                            (progn
-                              (rename-file src dest t)
-                              (message "Moved %s -> %s" basename target-dir))
-                          (copy-file src dest t)
-                          (message "Copied %s -> %s" basename target-dir)))
-                    (message "File not found: %s" src))))
-              ;; Clear the cut marker after pasting
-              (when (or is-cut (eq my-dired-clipboard-action 'cut))
-                 (shell-command "wl-copy --clear 2>/dev/null"))
-              (setq my-dired-clipboard-action nil)
-              (revert-buffer))
-          (message "No valid file URIs in clipboard"))))))
-
-;; Add keybindings
 (with-eval-after-load 'dired
-  (define-key dired-mode-map (kbd "C-c C-c") 'my-dired-copy-to-system-clipboard)
-  (define-key dired-mode-map (kbd "C-c C-x") 'my-dired-cut-to-system-clipboard)
-  (define-key dired-mode-map (kbd "C-c C-v") 'my-dired-paste-from-system-clipboard))
+  (define-key dired-mode-map (kbd "C-c C-c") 'my-dired-copy-to-system-clipboard))
 
 (provide 'init-dired)
 
