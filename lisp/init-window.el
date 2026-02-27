@@ -36,22 +36,6 @@
   :hook (window-setup . (lambda ()
                           (windmove-default-keybindings 'super))))
 
-;; Restore old window configurations
-;; 优先使用 tab-bar-history (Emacs 29+), winner 作为备选
-(use-package winner
-  :ensure nil
-  :commands (winner-undo winner-redo)
-  :init (setq winner-boring-buffers '("*Completions*"
-                                      "*Compile-Log*"
-                                      "*inferior-lisp*"
-                                      "*Fuzzy Completions*"
-                                      "*Apropos*"
-                                      "*Help*"
-                                      "*cvs*"
-                                      "*Buffer List*"
-                                      "*Ibuffer*"
-                                      "*esh command on file*")))
-
 ;; Quickly switch windows
 (use-package ace-window
   :pretty-hydra
@@ -87,7 +71,7 @@
      ("f" make-frame-command "new frame")
      ("d" delete-frame "delete frame")
      ("<left>" tab-bar-history-back "previous layout")
-     ("<right>" tab-bar-history-forward "next layout"))))
+     ("<right>" tab-bar-history-back "next layout"))))
   :custom-face
   (aw-leading-char-face ((t (:inherit font-lock-keyword-face :foreground unspecified :bold t :height 3.0))))
   (aw-minibuffer-leading-char-face ((t (:inherit font-lock-keyword-face :bold t :height 1.0))))
