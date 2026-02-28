@@ -486,6 +486,10 @@
 (use-package so-long
   :hook (after-init . global-so-long-mode))
 
+;; Better performance via tramp
+(use-package tramp-hlo
+  :hook (after-init . tramp-hlo-setup))
+
 (provide 'init-edit)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -122,67 +122,43 @@
       (defun my-dashboard-insert-copyright ()
         "Insert copyright in the footer."
         (dashboard-insert-center
-         (propertize (format "\nPowered by Vincent Zhang, %s\n" (format-time-string "%Y"))
+         (propertize (format "\nPowered by Centaur Studio, %s\n" (format-time-string "%Y"))
                      'face 'font-lock-comment-face)))
       (advice-add #'dashboard-insert-footer :after #'my-dashboard-insert-copyright)
 
       (defun restore-session ()
         "Restore the previous session."
         (interactive)
-        (message "Restoring previous session...")
-        (quit-window t)
-
-        (when (fboundp 'tabspaces-mode)
-          (unless tabspaces-mode
-            (tabspaces-mode t))
-          (tabspaces-restore-session)
-          (tabspaces-switch-or-create-workspace tabspaces-default-tab))
-
-        (message "Restoring previous session...done"))
+        (quit-dashboard)
+        (when (bound-and-true-p tabspaces-mode)
+          (tabspaces-restore-session)))
 
       (defvar dashboard-recover-layout-p nil
         "Wether recovers the layout.")
 
       (defun open-dashboard ()
-        "Open the *dashboard* buffer and jump to the first widget."
+        "Display dashboard in maximized window."
         (interactive)
-        ;; Check if need to recover layout
-        (if (length> (window-list-1)
-                     ;; exclude `treemacs' window
-                     (if (and (fboundp 'treemacs-current-visibility)
-                              (eq (treemacs-current-visibility) 'visible))
-                         2
-                       1))
-            (setq dashboard-recover-layout-p t))
-
-        ;; Display dashboard in maximized window
-        (delete-other-windows)
-
-        ;; Refresh dashboard buffer
-        (dashboard-refresh-buffer)
-
-        ;; Jump to the first section
-        (dashboard-goto-recent-files))
+        (dashboard-open)
+        (delete-other-windows))
 
       (defun quit-dashboard ()
-        "Quit dashboard window."
+        "Quit dashboard."
         (interactive)
-        (quit-window t)
+        (when (buffer-live-p (get-buffer dashboard-buffer-name))
+          (kill-buffer dashboard-buffer-name))
 
-        ;; Create workspace
-        (when (fboundp 'tabspaces-mode)
-          (unless tabspaces-mode
-            (tabspaces-mode t)
-            (tabspaces-switch-or-create-workspace tabspaces-default-tab)))
+        ;; Create workspace if necessary
+        (unless (bound-and-true-p tabspaces-session)
+          (setq tabspaces-session t)
+          (tabspaces-switch-or-create-workspace tabspaces-default-tab))
 
         ;; Recover layout
-        (when dashboard-recover-layout-p
-          (cond
-           ((bound-and-true-p tab-bar-history-mode)
-            (tab-bar-history-back))
-           ((bound-and-true-p winner-mode)
-            (winner-undo)))
-          (setq dashboard-recover-layout-p nil))))))
+        (cond
+         ((bound-and-true-p tab-bar-history-mode)
+          (tab-bar-history-back))
+         ((bound-and-true-p winner-mode)
+          (winner-undo)))))))
 
 (provide 'init-dashboard)
 
