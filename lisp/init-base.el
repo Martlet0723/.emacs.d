@@ -193,7 +193,7 @@
   :diminish visual-line-mode
   :ensure nil
   :hook ((after-init . size-indication-mode)
-         (text-mode . visual-line-mode)
+         ;; (text-mode . visual-line-mode)  ; Disabled: it forces line-move-visual to t locally
          ((prog-mode markdown-mode conf-mode) . enable-trailing-whitespace))
   :init
   (setq column-number-mode t
@@ -202,6 +202,7 @@
         line-move-visual nil
         track-eol t                     ; Keep cursor at end of lines. Require line-move-visual is nil.
         set-mark-command-repeat-pop t)  ; Repeating C-SPC after popping mark pops it again
+  (setq-default word-wrap t)            ; Wrap at word boundaries (buffer-local)
 
   ;; Visualize TAB, (HARD) SPACE, NEWLINE
   (setq-default show-trailing-whitespace nil) ; Don't show trailing whitespace by default
