@@ -177,6 +177,8 @@ Avoid placing large files like EAF in `site-lisp` to prevent slow startup."
 
   ;; EAF Applications
   (require 'eaf-browser)
+  ;; 默认网页缩放比例 (1.25 = 125%，可根据需要调整)
+  (setq eaf-webengine-default-zoom 1.75)
   (require 'eaf-pdf-viewer)
   (require 'eaf-image-viewer)
   (require 'eaf-video-player)

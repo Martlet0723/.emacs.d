@@ -56,7 +56,7 @@
 (setq fancy-splash-image centaur-logo)
 
 ;; Title
-(setq frame-title-format '("Centaur Emacs - %b")
+(setq frame-title-format '("Emacs - %b")
       icon-title-format frame-title-format)
 
 (when (or sys/mac-ns-p sys/mac-port-p)
