@@ -36,23 +36,30 @@
 ;; Interact with ChatGPT or other LLMs
 (use-package gptel
   :functions gptel-make-openai
-  :custom
-  (gptel-model 'MiniMax-M2.5)
+  :config
+  (setq gptel-model 'MiniMax-M2.5)
   ;; Use MiniMax API (OpenAI compatible)
-  (gptel-backend (gptel-make-openai "MiniMax"
-                   :host "api.minimaxi.com"
-                   :endpoint "/v1/chat/completions"
-                   :stream t
-                   :key (getenv "MINMAX_API_KEY")
-                   :models '(MiniMax-M2.5)))
+  (setq gptel-backend (gptel-make-openai "MiniMax"
+                        :host "api.minimaxi.com"
+                        :endpoint "/v1/chat/completions"
+                        :stream t
+                        :key (getenv "MINMAX_API_KEY")
+                        :models '(MiniMax-M2.5)))
+
+  ;; 修复 gptel-rewrite 内容丢失问题：在 rewrite 前保存到 kill-ring
+  (defun my/gptel-rewrite-save-region (&rest _)
+    "Save region content to kill-ring before gptel-rewrite."
+    (when (use-region-p)
+      (kill-new (buffer-substring-no-properties (region-beginning) (region-end)))))
+  (advice-add 'gptel-rewrite :before #'my/gptel-rewrite-save-region)
   ;; Previous config (GitHub Models):
-  ;; (gptel-model 'gpt-4o)
-  ;; (gptel-backend (gptel-make-openai "Github Models"
-  ;;                  :host "models.inference.ai.azure.com"
-  ;;                  :endpoint "/chat/completions?api-version=2024-05-01-preview"
-  ;;                  :stream t
-  ;;                  :key 'gptel-api-key
-  ;;                  :models '(gpt-4o)))
+  ;; (setq gptel-model 'gpt-4o)
+  ;; (setq gptel-backend (gptel-make-openai "Github Models"
+  ;;                   :host "models.inference.ai.azure.com"
+  ;;                   :endpoint "/chat/completions?api-version=2024-05-01-preview"
+  ;;                   :stream t
+  ;;                   :key 'gptel-api-key
+  ;;                   :models '(gpt-4o)))
   )
 
 ;; Generate commit messages for magit
