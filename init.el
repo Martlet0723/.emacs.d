@@ -166,8 +166,9 @@ Avoid placing large files like EAF in `site-lisp` to prevent slow startup."
 
   (require 'eaf)
 
-  ;; KDE Plasma Wayland 窗口管理配置
-  (setq eaf-wm-name "KDE")
+  ;; posframe在分割屏幕时，会被eaf遮挡，所以需要KDE Plasma Wayland 窗口管理配置
+  ;;目前使用minibuffer,所以暂时禁用
+  ;; (setq eaf-wm-name "KDE")
 
   ;; 强制移除dired和find-file的advice（双重保险）
   (advice-remove #'dired-find-file #'eaf--dired-find-file-advisor)
