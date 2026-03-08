@@ -214,4 +214,8 @@ Avoid placing large files like EAF in `site-lisp` to prevent slow startup."
   (advice-add 'eaf-markdown-previewer-open :before #'my/eaf-preheat-if-needed))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; EAF Music Cookie 自动复制工具
+(load-file "~/.emacs.d/eaf-music-cookie.el")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
