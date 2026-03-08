@@ -39,10 +39,28 @@
 
 ;;;###autoload
 (defun eaf-music-open-with-cookie ()
-  "先复制 Cookie，然后打开网易云音乐"
+  "先复制 Cookie，然后自动打开网易云音乐"
   (interactive)
-  (eaf-music-copy-netease-cookie)
-  (message "Cookie 复制中，完成后请手动运行 M-x eaf-open-cloud-music"))
+  (let ((buffer (get-buffer-create "*eaf-music-cookie*")))
+    (pop-to-buffer buffer)
+    (erase-buffer)
+    (insert "正在复制 Cookie...\n")
+    (insert "========================================\n\n")
+    (if (file-exists-p eaf-music-cookie-script-path)
+        (make-process
+         :name "eaf-music-cookie"
+         :buffer buffer
+         :command (list "python3" eaf-music-cookie-script-path)
+         :sentinel (lambda (proc event)
+                    (when (string-match "finished" event)
+                      (with-current-buffer (process-buffer proc)
+                        (goto-char (point-max))
+                        (if (string-match "✅ Cookie 已保存" (buffer-string))
+                            (progn
+                              (insert "\n✅ Cookie 复制成功！正在打开音乐播放器...\n")
+                              (run-with-timer 0.5 nil #'eaf-open-cloud-music))
+                          (insert "\n❌ Cookie 复制失败，请检查日志\n"))))))
+      (insert (format "❌ 脚本不存在: %s\n" eaf-music-cookie-script-path)))))
 
 (provide 'eaf-music-cookie)
 ;;; eaf-music-cookie.el ends here
