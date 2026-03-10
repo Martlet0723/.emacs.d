@@ -294,6 +294,8 @@
          ("C-c 3"         . mc/mark-next-like-this)
          ("C-c 4"         . mc/mark-previous-like-this)
          ("C-c 5"         . mc/mark-all-like-this)
+         ("C-c 6"         . mc/mark-previous-lines)
+         ("C-c 7"         . mc/mark-next-lines)
 
          :map mc/keymap
          ("C-|" . mc/vertical-align-with-space))
