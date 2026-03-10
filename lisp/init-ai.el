@@ -52,6 +52,16 @@
     (when (use-region-p)
       (kill-new (buffer-substring-no-properties (region-beginning) (region-end)))))
   (advice-add 'gptel-rewrite :before #'my/gptel-rewrite-save-region)
+  ;; 修复 gptel-magit 处理 reasoning 响应的问题
+  ;; MiniMax 等 API 可能返回 reasoning 字段，gptel 会将其作为 (reasoning . text) 传给回调
+  (defun my/gptel-magit--generate-around (orig-fun callback)
+    "Advice to handle reasoning responses in gptel-magit."
+    (funcall orig-fun
+             (lambda (response info)
+               ;; 跳过 reasoning 类型的响应，只处理实际内容
+               (unless (and (consp response) (eq (car response) 'reasoning))
+                 (funcall callback response info)))))
+
   ;; Previous config (GitHub Models):
   ;; (setq gptel-model 'gpt-4o)
   ;; (setq gptel-backend (gptel-make-openai "Github Models"
@@ -64,8 +74,23 @@
 
 ;; Generate commit messages for magit
 (use-package gptel-magit
-  :hook (magit-mode . gptel-magit-install))
-
+  :hook (magit-mode . gptel-magit-install)
+  :config
+  ;; 修复 reasoning 响应导致的类型错误 (wrong-type-argument char-or-string-p)
+  ;; 原因：某些模型（如带思考功能的模型）会返回 (reasoning . "text") 格式的响应
+  ;; gptel-magit 的回调函数期望字符串，但收到了 cons cell
+  (defun gptel-magit--generate (callback)
+    "Generate a commit message for current magit repo.
+Invokes CALLBACK with the generated message when done."
+    (let ((diff (magit-git-output "diff" "--cached")))
+      (gptel-magit--request diff
+                            :system gptel-magit-commit-prompt
+                            :context nil
+                            :callback (lambda (response _info)
+                                        ;; 跳过 reasoning cons cell，只处理字符串响应
+                                        (when (stringp response)
+                                          (let ((msg (gptel-magit--format-commit-message response)))
+                                            (funcall callback msg))))))))
 ;; A native shell experience to interact with ACP agents
 (when emacs/>=29p
   (use-package agent-shell
@@ -139,8 +164,8 @@
   :commands (org-ai-mode org-ai-global-mode)
   :hook (org-mode . org-ai-mode)
   :bind (:map org-ai-mode-map
-              ("C-c C-c" . org-ai-complete-block)
-              ("C-c C-k" . org-ai-kill-region-at-point))
+         ("C-c C-c" . org-ai-complete-block)
+         ("C-c C-k" . org-ai-kill-region-at-point))
   :custom
   ;; Use MiniMax API
   (org-ai-default-chat-model "MiniMax-M2.5")
