@@ -39,6 +39,7 @@
   :custom
   (magit-diff-refine-hunk t)
   (git-commit-major-mode 'git-commit-elisp-text-mode)
+  :hook (git-commit-setup . (lambda () (setq fill-column git-commit-summary-max-length)))
   :config
   (when sys/win32p
     (setenv "GIT_ASKPASS" "git-gui--askpass")))
@@ -65,20 +66,15 @@
          ("t" . git-timemachine))
   :hook ((git-timemachine-mode . (lambda ()
                                    "Improve `git-timemachine' buffers."
-                                   ;; Display different colors in mode-line
-                                   (if (facep 'mode-line-active)
-                                       (face-remap-add-relative 'mode-line-active 'custom-modified)
-                                     (face-remap-add-relative 'mode-line 'custom-modified))
-
                                    ;; Highlight symbols in elisp
-                                   (and (derived-mode-p 'emacs-lisp-mode)
-                                        (fboundp 'highlight-defined-mode)
-                                        (highlight-defined-mode t))
+                                   (when (derived-mode-p 'emacs-lisp-mode)
+                                     (and (fboundp 'highlight-defined-mode)
+                                          (highlight-defined-mode t)))
 
                                    ;; Display line numbers
-                                   (and (derived-mode-p 'prog-mode 'yaml-mode 'yaml-ts-mode)
-                                        (fboundp 'display-line-numbers-mode)
-                                        (display-line-numbers-mode t))))
+                                   (when (derived-mode-p 'prog-mode 'yaml-mode 'yaml-ts-mode)
+                                     (and (fboundp 'display-line-numbers-mode)
+                                          (display-line-numbers-mode t)))))
          (before-revert . (lambda ()
                             (when (bound-and-true-p git-timemachine-mode)
                               (user-error "Cannot revert the timemachine buffer"))))))
@@ -101,7 +97,7 @@
         ("," (catch 'git-messenger-loop (git-messenger:show-parent)) "go parent")
         ("q" git-messenger:popup-close "quit")))
 
-    (defun my-git-messenger:format-detail (fn vcs commit-id author message)
+    (defun my/git-messenger:format-detail (fn vcs commit-id author message)
       (if (eq vcs 'git)
           (let ((date (git-messenger:commit-date commit-id))
                 (colon (propertize ":" 'face 'font-lock-comment-face)))
@@ -117,9 +113,9 @@
              message
              (propertize "\nPress q to quit" 'face '(:inherit (font-lock-comment-face italic)))))
         (funcall fn vcs commit-id author message)))
-    (advice-add #'git-messenger:format-detail :around #'my-git-messenger:format-detail)
+    (advice-add #'git-messenger:format-detail :around #'my/git-messenger:format-detail)
 
-    (defun my-git-messenger:popup-message ()
+    (defun my/git-messenger:popup-message ()
       "Popup message with `posframe', `pos-tip', `lv' or `message', and dispatch actions with `hydra'."
       (interactive)
       (let* ((hydra-hint-display-type 'message)
@@ -168,7 +164,7 @@
               (t (message "%s" popuped-message)))
         (run-hook-with-args 'git-messenger:after-popup-hook popuped-message)))
     (advice-add #'git-messenger:popup-close :override #'ignore)
-    (advice-add #'git-messenger:popup-message :override #'my-git-messenger:popup-message)))
+    (advice-add #'git-messenger:popup-message :override #'my/git-messenger:popup-message)))
 
 ;; Resolve diff3 conflicts
 (use-package smerge-mode
@@ -217,10 +213,6 @@
 (use-package browse-at-remote
   :bind (:map vc-prefix-map
          ("B" . browse-at-remote)))
-
-;; Get git URL for a buffer location
-(use-package git-link
-  :bind ("C-c c g" . git-link-dispatch))
 
 ;; Git configuration modes
 (use-package git-modes)

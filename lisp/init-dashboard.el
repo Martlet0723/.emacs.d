@@ -119,12 +119,12 @@
     (with-no-warnings
       ;; Insert copyright
       ;; @see https://github.com/emacs-dashboard/emacs-dashboard/issues/219
-      (defun my-dashboard-insert-copyright ()
+      (defun my/dashboard-insert-copyright ()
         "Insert copyright in the footer."
         (dashboard-insert-center
          (propertize (format "\nPowered by Centaur Studio, %s\n" (format-time-string "%Y"))
                      'face 'font-lock-comment-face)))
-      (advice-add #'dashboard-insert-footer :after #'my-dashboard-insert-copyright)
+      (advice-add #'dashboard-insert-footer :after #'my/dashboard-insert-copyright)
 
       (defun restore-session ()
         "Restore the previous session."
@@ -154,11 +154,8 @@
           (tabspaces-switch-or-create-workspace tabspaces-default-tab))
 
         ;; Recover layout
-        (cond
-         ((bound-and-true-p tab-bar-history-mode)
-          (tab-bar-history-back))
-         ((bound-and-true-p winner-mode)
-          (winner-undo)))))))
+        (when (bound-and-true-p tab-bar-history-mode)
+          (tab-bar-history-back))))))
 
 (provide 'init-dashboard)
 
