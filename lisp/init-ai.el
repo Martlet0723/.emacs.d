@@ -35,42 +35,68 @@
 
 ;; Interact with ChatGPT or other LLMs
 (use-package gptel
-  :functions gptel-make-openai
+  :diminish
+  :functions (gptel-make-openai gptel-make-deepseek gptel-make-anthropic)
+  :bind (("C-<f12>"   . gptel)
+         ("C-M-<f12>" . gptel-menu))
+  :hook (gptel-mode . gptel-highlight-mode)
   :config
-  (setq gptel-model 'MiniMax-M2.5)
-  ;; Use MiniMax API (OpenAI compatible)
-  (setq gptel-backend (gptel-make-openai "MiniMax"
-                        :host "api.minimaxi.com"
-                        :endpoint "/v1/chat/completions"
-                        :stream t
-                        :key (getenv "MINMAX_API_KEY")
-                        :models '(MiniMax-M2.5)))
+  ;; Register backends and setup models
+  ;; Securing API keys with authinfo (see `auth-sources')
+  ;; format: "machine {HOST} login apikey password {token}"
+
+  ;; 默认使用 MiniMax
+  (setq gptel-model 'MiniMax-M2.5
+        gptel-backend
+        (gptel-make-openai "MiniMax"
+          :host "api.minimaxi.com"
+          :endpoint "/v1/chat/completions"
+          :stream t
+          :key (getenv "MINMAX_API_KEY")
+          :models '(MiniMax-M2.5)))
+
+  ;; GitHub Models
+  (gptel-make-openai "Github Models"
+    :host "models.inference.ai.azure.com"
+    :endpoint "/chat/completions?api-version=2024-05-01-preview"
+    :stream t
+    :key 'gptel-api-key
+    :models '(gpt-4o))
+
+  (gptel-make-openai "Nvidia"
+    :host "integrate.api.nvidia.com"
+    :endpoint "/v1/chat/completions"
+    :stream t
+    :key 'gptel-api-key
+    :models '(z-ai/glm4.7 minimaxai/minimax-m2.1 deepseek-ai/deepseek-v3.1-terminus))
+
+  (gptel-make-openai "ChatGLM"
+    :host "open.bigmodel.cn"
+    :endpoint "/api/paas/v4/chat/completions"
+    :stream t
+    :key 'gptel-api-key
+    :models '(glm-4.7 glm-4.7-flash))
+
+  (gptel-make-openai "Moonshot"
+    :host "api.moonshot.cn"
+    :key 'gptel-api-key
+    :stream t
+    :models '(kimi-latest kimi-k2-0711-preview))
+
+  (gptel-make-deepseek "DeepSeek"
+    :stream t
+    :key 'gptel-api-key)
+
+  (gptel-make-anthropic "Claude"
+    :stream t
+    :key 'gptel-api-key)
 
   ;; 修复 gptel-rewrite 内容丢失问题：在 rewrite 前保存到 kill-ring
   (defun my/gptel-rewrite-save-region (&rest _)
     "Save region content to kill-ring before gptel-rewrite."
     (when (use-region-p)
       (kill-new (buffer-substring-no-properties (region-beginning) (region-end)))))
-  (advice-add 'gptel-rewrite :before #'my/gptel-rewrite-save-region)
-  ;; 修复 gptel-magit 处理 reasoning 响应的问题
-  ;; MiniMax 等 API 可能返回 reasoning 字段，gptel 会将其作为 (reasoning . text) 传给回调
-  (defun my/gptel-magit--generate-around (orig-fun callback)
-    "Advice to handle reasoning responses in gptel-magit."
-    (funcall orig-fun
-             (lambda (response info)
-               ;; 跳过 reasoning 类型的响应，只处理实际内容
-               (unless (and (consp response) (eq (car response) 'reasoning))
-                 (funcall callback response info)))))
-
-  ;; Previous config (GitHub Models):
-  ;; (setq gptel-model 'gpt-4o)
-  ;; (setq gptel-backend (gptel-make-openai "Github Models"
-  ;;                   :host "models.inference.ai.azure.com"
-  ;;                   :endpoint "/chat/completions?api-version=2024-05-01-preview"
-  ;;                   :stream t
-  ;;                   :key 'gptel-api-key
-  ;;                   :models '(gpt-4o)))
-  )
+  (advice-add 'gptel-rewrite :before #'my/gptel-rewrite-save-region))
 
 ;; Generate commit messages for magit
 (use-package gptel-magit
@@ -91,10 +117,44 @@ Invokes CALLBACK with the generated message when done."
                                         (when (stringp response)
                                           (let ((msg (gptel-magit--format-commit-message response)))
                                             (funcall callback msg))))))))
+
 ;; A native shell experience to interact with ACP agents
 (when emacs/>=29p
   (use-package agent-shell
-    :diminish agent-shell-ui-mode))
+    :diminish agent-shell-ui-mode
+    :commands agent-shell-insert
+    :defines magit-mode-map
+    :functions (magit-staged-files magit-commit-p magit-thing-at-point)
+    :custom (agent-shell-display-action '(display-buffer-reuse-window))
+    :bind (("<f12>"      . agent-shell)
+           ("<f13>"      . agent-shell)
+           ("C-c a"      . agent-shell)
+           ("C-c A"      . agent-shell-new-shell)
+           :map agent-shell-mode-map
+           ("C-h ?"      . agent-shell-help-menu)
+           ("C-<return>" . agent-shell-help-menu)
+           :map magit-mode-map
+           ("C-c C-g"    . my/agent-shell-magit-generate-commit)
+           ("C-c C-r"    . my/agent-shell-review-magit-commit))
+    :config
+    (with-eval-after-load 'magit
+      (defun my/agent-shell-magit-generate-commit ()
+        "Generate conventional message and commit stage changes in magit."
+        (interactive)
+        (if (magit-staged-files)
+            (agent-shell-insert
+             :submit t
+             :text "Commit changes with conventional message")
+          (user-error "No staged changes")))
+
+      (defun my/agent-shell-review-magit-commit ()
+        "Send the commit from magit to agent-shell for reviews."
+        (interactive)
+        (if-let ((commit (magit-commit-p (magit-thing-at-point 'git-revision t))))
+            (agent-shell-insert
+             :submit t
+             :text (format "Review commit: %s" commit))
+          (user-error "No magit commit at point"))))))
 
 ;; Minuet - AI Code Completion (like Copilot)
 (use-package minuet
@@ -189,4 +249,5 @@ Invokes CALLBACK with the generated message when done."
 
 (provide 'init-ai)
 
- ;;; init-ai.el ends here
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-ai.el ends here
