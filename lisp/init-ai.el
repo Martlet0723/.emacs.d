@@ -75,7 +75,7 @@
     :endpoint "/api/paas/v4/chat/completions"
     :stream t
     :key 'gptel-api-key
-    :models '(glm-4.7 glm-4.7-flash))
+    :models '(glm-4.7 glm-4.7-flash glm-5))
 
   (gptel-make-openai "Moonshot"
     :host "api.moonshot.cn"
@@ -150,7 +150,7 @@ Invokes CALLBACK with the generated message when done."
       (defun my/agent-shell-review-magit-commit ()
         "Send the commit from magit to agent-shell for reviews."
         (interactive)
-        (if-let ((commit (magit-commit-p (magit-thing-at-point 'git-revision t))))
+        (if-let* ((commit (magit-commit-p (magit-thing-at-point 'git-revision t))))
             (agent-shell-insert
              :submit t
              :text (format "Review commit: %s" commit))
