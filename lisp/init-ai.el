@@ -52,7 +52,7 @@
           :host "api.minimaxi.com"
           :endpoint "/v1/chat/completions"
           :stream t
-          :key (getenv "MINMAX_API_KEY")
+          :key (getenv "MINIMAX_API_KEY")
           :models '(MiniMax-M2.5)))
 
   ;; GitHub Models
@@ -125,7 +125,9 @@ Invokes CALLBACK with the generated message when done."
     :commands agent-shell-insert
     :defines magit-mode-map
     :functions (magit-staged-files magit-commit-p magit-thing-at-point)
-    :custom (agent-shell-display-action '(display-buffer-reuse-window))
+    :custom
+    (agent-shell-display-action '(display-buffer-reuse-window))
+    (agent-shell-header-style 'text)  ; 禁用图形化 header，使用纯文本
     :bind (("<f12>"      . agent-shell)
            ("<f13>"      . agent-shell)
            ("C-c a"      . agent-shell)
@@ -207,8 +209,8 @@ Invokes CALLBACK with the generated message when done."
   ;; 关闭自动提交
   (aidermacs-auto-commits nil)
   :config
-  ;; 设置 Anthropic 兼容 API Key (从 env.el 读取 MINMAX_API_KEY)
-  (setenv "ANTHROPIC_API_KEY" (getenv "MINMAX_API_KEY"))
+  ;; 设置 Anthropic 兼容 API Key (从 env.el 读取 MINIMAX_API_KEY)
+  (setenv "ANTHROPIC_API_KEY" (getenv "MINIMAX_API_KEY"))
   ;; 设置 MiniMax Anthropic 兼容 API 端点
   (setenv "ANTHROPIC_BASE_URL" "https://api.minimaxi.com/anthropic"))
 
@@ -216,7 +218,7 @@ Invokes CALLBACK with the generated message when done."
 ;; Set API config before loading org-ai
 ;; MiniMax uses OpenAI-compatible API, so we use 'openai service with custom endpoint
 (setq org-ai-service 'openai)
-(setq org-ai-openai-api-token (getenv "MINMAX_API_KEY"))
+(setq org-ai-openai-api-token (getenv "MINIMAX_API_KEY"))
 (setq org-ai-use-auth-source nil)
 ;; Set MiniMax API endpoint (OpenAI compatible)
 (setq org-ai-openai-chat-endpoint "https://api.minimaxi.com/v1/chat/completions")
