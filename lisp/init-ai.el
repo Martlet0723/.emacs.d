@@ -128,6 +128,7 @@ Invokes CALLBACK with the generated message when done."
     :custom
     (agent-shell-display-action '(display-buffer-reuse-window))
     (agent-shell-header-style 'text)  ; 禁用图形化 header，使用纯文本
+    (agent-shell-opencode-default-model-id "minimax-cn-coding-plan/MiniMax-M2.7")
     :bind (("<f12>"      . agent-shell)
            ("<f13>"      . agent-shell)
            ("C-c a"      . agent-shell)
