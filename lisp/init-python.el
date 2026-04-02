@@ -51,8 +51,13 @@
 
   ;; Linter & formatter: `ruff'
   (when (executable-find "ruff")
+    ;; Linter via flymake
     (use-package flymake-ruff
-      :hook (python-base-mode . flymake-ruff-load)))
+      :hook (python-base-mode . flymake-ruff-load))
+    ;; Formatter via apheleia (overrides default black)
+    (with-eval-after-load 'apheleia
+      (setf (alist-get 'python-mode apheleia-mode-alist) 'ruff)
+      (setf (alist-get 'python-ts-mode apheleia-mode-alist) 'ruff)))
 
   ;; Default to Python 3. Prefer the versioned Python binaries since some
   ;; systems stupidly make the unversioned one point at Python 2.

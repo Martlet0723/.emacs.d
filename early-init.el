@@ -58,9 +58,9 @@
       native-comp-jit-compilation nil)
 
 ;; PERF: Reduce file-name operations on `load-path'.
-;; No dynamic modules are loaded this early, so we skip .so/.dll search.
-;; Also skip .gz to avoid decompression checks.
-(setq load-suffixes '(".elc" ".el")
+;; Skip .gz to avoid decompression checks.
+;; Note: .so is needed for dynamic modules like vterm
+(setq load-suffixes '(".elc" ".el" ".so")
       load-file-rep-suffixes '(""))
 
 ;; Package initialize occurs automatically, before `user-init-file' is
