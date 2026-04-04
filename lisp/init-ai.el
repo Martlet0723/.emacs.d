@@ -46,14 +46,14 @@
   ;; format: "machine {HOST} login apikey password {token}"
 
   ;; 默认使用 MiniMax
-  (setq gptel-model 'MiniMax-M2.5
+  (setq gptel-model 'MiniMax-M2.7
         gptel-backend
         (gptel-make-openai "MiniMax"
           :host "api.minimaxi.com"
           :endpoint "/v1/chat/completions"
           :stream t
           :key (getenv "MINIMAX_API_KEY")
-          :models '(MiniMax-M2.5)))
+          :models '(MiniMax-M2.7)))
 
   ;; GitHub Models
   (gptel-make-openai "Github Models"
@@ -129,6 +129,7 @@ Invokes CALLBACK with the generated message when done."
     (agent-shell-display-action '(display-buffer-reuse-window))
     (agent-shell-header-style 'text)  ; 禁用图形化 header，使用纯文本
     (agent-shell-opencode-default-model-id "minimax-cn-coding-plan/MiniMax-M2.7")
+    ;; (agent-shell-claude-default-model-id "minimax-cn-coding-plan/MiniMax-M2.7")
     :bind (("<f12>"      . agent-shell)
            ("<f13>"      . agent-shell)
            ("C-c a"      . agent-shell)
