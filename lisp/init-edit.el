@@ -474,11 +474,16 @@
       (setq xclip-program "powershell.exe"))
 
     ;; @see https://github.com/microsoft/wslg/issues/15#issuecomment-1796195663
+    ;; NOTE: 必须通过标准输入传递文本，而不是作为命令行参数
+    ;; 否则以 `-` 开头的内容会被 wl-copy 解释为选项导致复制失败
     (when (eq xclip-method 'wl-copy)
       (set-clipboard-coding-system 'gbk) ; for wsl
       (setq interprogram-cut-function
             (lambda (text)
-              (start-process "xclip"  nil xclip-program "--trim-newline" "--type" "text/plain;charset=utf-8" text))))))
+              (let ((process-connection-type nil))
+                (let ((proc (start-process "wl-copy" nil xclip-program "--trim-newline" "--type" "text/plain;charset=utf-8")))
+                  (process-send-string proc text)
+                  (process-send-eof proc))))))))
 
 ;; Open files as another user
 (unless sys/win32p
